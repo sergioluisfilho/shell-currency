@@ -43,11 +43,17 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
     }
 
     /* ── Layout ── */
-    .app { max-width: 480px; margin: 0 auto; padding: 20px 16px 100px; }
+    .app {
+      max-width: 480px; margin: 0 auto;
+      padding: calc(20px + env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));
+      padding-left: calc(16px + env(safe-area-inset-left));
+      padding-right: calc(16px + env(safe-area-inset-right));
+    }
 
     @media (min-width: 768px) {
       .app { max-width: 860px; padding: 40px 24px 80px; }
