@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Câmbio Peru</title>
+  <meta name="description" content="Conversor de moedas para turistas no Peru" />
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --surface2: #22222c;
+      --border: #2e2e3a;
+      --accent: #7c6af7;
+      --accent-soft: #7c6af720;
+      --accent2: #f7a26a;
+      --text: #f0f0f5;
+      --text-muted: #7a7a8c;
+      --text-dim: #4a4a5a;
+      --success: #5af7a2;
+      --danger: #f76a6a;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 4px 32px #0007;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .app { max-width: 480px; margin: 0 auto; padding: 20px 16px 100px; }
+
+    @media (min-width: 768px) {
+      .app { max-width: 860px; padding: 40px 24px 80px; }
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-text p { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    .refresh-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: 10px;
+      padding: 8px 12px; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .2s;
+    }
+    .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+    .refresh-btn.loading .spin { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; background: var(--surface); border-radius: var(--radius);
+      padding: 4px; gap: 2px; margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1; padding: 10px; border-radius: 12px; border: none;
+      background: transparent; color: var(--text-muted);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: all .2s; display: flex; align-items: center;
+      justify-content: center; gap: 6px;
+    }
+    .tab.active {
+      background: var(--surface2); color: var(--text);
+      box-shadow: 0 2px 8px #0004;
+    }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      margin-bottom: 20px; font-size: 12px; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-dim); margin-right: 7px; flex-shrink: 0;
+    }
+    .status-dot.ok { background: var(--success); }
+    .status-dot.error { background: var(--danger); }
+    .status-dot.loading { background: var(--accent2); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .status-left { display: flex; align-items: center; }
+
+    /* ── Rate Cards ── */
+    .rates-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 768px) {
+      .rates-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .rate-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      cursor: pointer; transition: all .2s; position: relative;
+      overflow: hidden;
+    }
+    .rate-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--accent-soft), transparent);
+      opacity: 0; transition: opacity .2s;
+    }
+    .rate-card:hover::before, .rate-card.selected::before { opacity: 1; }
+    .rate-card.selected { border-color: var(--accent); }
+    .rate-flag { font-size: 24px; margin-bottom: 10px; }
+    .rate-name { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .rate-code { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .rate-value {
+      font-size: 12px; color: var(--text-muted); margin-top: 6px;
+      font-family: 'SF Mono', monospace;
+    }
+    .rate-skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+      border-radius: 6px; height: 18px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Converter ── */
+    .converter-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    }
+    .converter-label {
+      font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: .6px; margin-bottom: 10px; font-weight: 600;
+    }
+    .input-row {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .currency-select {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius-sm);
+      padding: 12px 10px; font-size: 14px; cursor: pointer;
+      min-width: 90px; transition: border-color .2s;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7a8c' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .currency-select:focus { outline: none; border-color: var(--accent); }
+    .amount-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius-sm);
+      padding: 12px 14px; font-size: 20px; font-weight: 600;
+      transition: border-color .2s; font-family: inherit;
+      letter-spacing: -0.5px;
+    }
+    .amount-input:focus { outline: none; border-color: var(--accent); }
+    .amount-input::placeholder { color: var(--text-dim); }
+
+    .results-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-top: 16px;
+    }
+    @media (min-width: 768px) {
+      .results-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .result-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 12px;
+      transition: border-color .2s;
+    }
+    .result-item.highlight { border-color: var(--accent); }
+    .result-flag { font-size: 16px; margin-bottom: 6px; }
+    .result-code { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .result-value {
+      font-size: 17px; font-weight: 700; margin-top: 4px;
+      letter-spacing: -0.5px; font-family: 'SF Mono', monospace;
+    }
+    .result-note { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Tourist spread note ── */
+    .spread-note {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent2);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+      font-size: 12px; color: var(--text-muted); line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .spread-note strong { color: var(--accent2); }
+
+    /* ── Guide Panel ── */
+    .guide-header {
+      background: linear-gradient(135deg, var(--accent-soft), transparent);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; margin-bottom: 20px;
+    }
+    .guide-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .guide-header p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    .guide-select-row {
+      display: flex; gap: 10px; margin-bottom: 20px;
+    }
+    .guide-select-row .currency-select { flex: 1; }
+
+    .method-cards { display: flex; flex-direction: column; gap: 12px; }
+    .method-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; cursor: pointer;
+      transition: all .2s;
+    }
+    .method-card:hover { border-color: var(--accent); }
+    .method-card.open .method-body { display: block; }
+    .method-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .method-info { display: flex; align-items: center; gap: 12px; }
+    .method-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .method-title { font-size: 15px; font-weight: 600; }
+    .method-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .method-badge {
+      font-size: 10px; padding: 3px 8px; border-radius: 20px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .badge-best { background: #5af7a220; color: var(--success); border: 1px solid #5af7a240; }
+    .badge-ok { background: #f7a26a20; color: var(--accent2); border: 1px solid #f7a26a40; }
+    .badge-avoid { background: #f76a6a20; color: var(--danger); border: 1px solid #f76a6a40; }
+    .method-chevron { color: var(--text-dim); transition: transform .2s; font-size: 18px; }
+    .method-card.open .method-chevron { transform: rotate(180deg); }
+    .method-body {
+      display: none; margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--text-muted); line-height: 1.6;
+    }
+    .method-body ul { margin: 8px 0 8px 16px; }
+    .method-body li { margin-bottom: 4px; }
+    .method-body strong { color: var(--text); }
+    .method-links { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .method-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--accent); text-decoration: none; border-radius: 8px;
+      padding: 7px 12px; font-size: 12px; font-weight: 500;
+      transition: all .2s;
+    }
+    .method-link:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+    .tip-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--success);
+      border-radius: var(--radius-sm); padding: 14px;
+      margin-top: 16px; font-size: 12px; color: var(--text-muted); line-height: 1.6;
+    }
+    .tip-box strong { color: var(--success); }
+
+    /* ── Auth overlay ── */
+    #auth-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .auth-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px 28px;
+      width: 100%; max-width: 340px; text-align: center;
+    }
+    .auth-icon {
+      width: 64px; height: 64px; border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 20px;
+    }
+    .auth-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .auth-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+    .auth-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius-sm);
+      padding: 14px; font-size: 16px; text-align: center;
+      letter-spacing: 4px; margin-bottom: 12px;
+      transition: border-color .2s; font-family: inherit;
+    }
+    .auth-input:focus { outline: none; border-color: var(--accent); }
+    .auth-btn {
+      width: 100%; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      padding: 14px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .auth-btn:hover { opacity: .85; }
+    .auth-error {
+      font-size: 12px; color: var(--danger);
+      margin-top: 10px; min-height: 18px;
+    }
+    .auth-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px; border-radius: 50px;
+      font-size: 13px; font-weight: 500; pointer-events: none;
+      opacity: 0; transition: all .3s; white-space: nowrap; z-index: 999;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    @media (min-width: 768px) { .bottom-nav { display: none; } }
+    .nav-btn {
+      flex: 1; background: none; border: none; color: var(--text-dim);
+      font-size: 10px; cursor: pointer; padding: 6px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      transition: color .2s;
+    }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn svg { width: 22px; height: 22px; }
+
+    /* desktop tabs hide on mobile when nav exists */
+    @media (max-width: 767px) { .tabs { display: none; } }
+    @media (min-width: 768px) { .bottom-nav { display: none; } }
+  </style>
+</head>
+<body>
+
+<!-- Auth Overlay -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-icon">🔐</div>
+    <h2>Câmbio Peru</h2>
+    <p>Digite a senha para acessar as cotações atualizadas em tempo real.</p>
+    <input type="password" id="auth-input" class="auth-input" placeholder="••••••••" maxlength="32" autocomplete="current-password" />
+    <button class="auth-btn" onclick="tryAuth()">Entrar</button>
+    <div class="auth-error" id="auth-error"></div>
+    <p class="auth-hint">Sem senha? Os dados em cache ainda funcionam offline.</p>
+    <button style="margin-top:14px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;" onclick="skipAuth()">Continuar no modo offline →</button>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🇵🇪</div>
+      <div class="logo-text">
+        <h1>Câmbio Peru</h1>
+        <p>Turista em trânsito</p>
+      </div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="refreshRates()" title="Atualizar cotações">
+      <span class="spin" id="refresh-icon">↻</span>
+      <span id="refresh-label">Atualizar</span>
+    </button>
+  </header>
+
+  <!-- Desktop tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('rates', this)">
+      <span>📊</span> Cotações
+    </button>
+    <button class="tab" onclick="showPanel('converter', this)">
+      <span>⇄</span> Converter
+    </button>
+    <button class="tab" onclick="showPanel('guide', this)">
+      <span>🗺</span> Como Trocar
+    </button>
+  </div>
+
+  <!-- ─── RATES PANEL ─── -->
+  <div class="panel active" id="panel-rates">
+    <div class="status-bar">
+      <div class="status-left">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Verificando dados...</span>
+      </div>
+      <span id="status-date" style="font-size:11px;"></span>
+    </div>
+
+    <div class="rates-grid" id="rates-grid">
+      <!-- cards generated by JS -->
+    </div>
+
+    <div class="spread-note">
+      <strong>Nota para turistas:</strong> Os valores exibidos são cotações de mercado (mid-rate).
+      Casas de câmbio e bancos no Peru costumam cobrar entre <strong>2% e 8%</strong> de spread.
+      Use o conversor para simular o valor real que você receberá.
+    </div>
+  </div>
+
+  <!-- ─── CONVERTER PANEL ─── -->
+  <div class="panel" id="panel-converter">
+    <div class="converter-card">
+      <div class="converter-label">Tenho</div>
+      <div class="input-row">
+        <select class="currency-select" id="from-currency" onchange="convert()">
+          <option value="BRL">🇧🇷 BRL</option>
+          <option value="USD">🇺🇸 USD</option>
+          <option value="EUR">🇪🇺 EUR</option>
+          <option value="PEN">🇵🇪 PEN</option>
+        </select>
+        <input type="number" id="amount-input" class="amount-input"
+          placeholder="0" value="100" min="0" oninput="convert()" />
+      </div>
+    </div>
+
+    <div class="spread-note">
+      <strong>Com spread turístico (~4%):</strong> os valores abaixo já consideram o desconto médio praticado nas casas de câmbio do Peru.
+    </div>
+
+    <div class="results-grid" id="results-grid">
+      <!-- generated by JS -->
+    </div>
+  </div>
+
+  <!-- ─── GUIDE PANEL ─── -->
+  <div class="panel" id="panel-guide">
+    <div class="guide-header">
+      <h2>🗺 Como trocar seu dinheiro</h2>
+      <p>Você é turista no Peru. Veja as melhores formas de converter sua moeda com o menor custo.</p>
+    </div>
+
+    <div class="guide-select-row">
+      <select class="currency-select" id="guide-from" onchange="renderGuide()" style="flex:1;">
+        <option value="BRL">🇧🇷 Reais (BRL)</option>
+        <option value="USD">🇺🇸 Dólares (USD)</option>
+        <option value="EUR">🇪🇺 Euros (EUR)</option>
+        <option value="PEN">🇵🇪 Soles (PEN)</option>
+      </select>
+      <div style="display:flex;align-items:center;color:var(--text-muted);font-size:20px;">→</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:14px;flex:1;text-align:center;">
+        🇵🇪 Soles (PEN)
+      </div>
+    </div>
+
+    <div class="method-cards" id="guide-methods">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-rates" onclick="showPanel('rates', null, 'nav-rates')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Cotações
+  </button>
+  <button class="nav-btn" id="nav-converter" onclick="showPanel('converter', null, 'nav-converter')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+    Converter
+  </button>
+  <button class="nav-btn" id="nav-guide" onclick="showPanel('guide', null, 'nav-guide')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Como Trocar
+  </button>
+</nav>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6y6WmJ6N9pidBEZ1Vlz0IBXlwj1By_Oq6a2bjB7-FsXzgSPylIbXPt0UxFZ6V9z-XnA/exec';
+const CURRENCIES = ['BRL','USD','EUR','PEN'];
+const CURRENCY_META = {
+  BRL: { flag:'🇧🇷', name:'Real',   symbol:'R$',  decimals:2 },
+  USD: { flag:'🇺🇸', name:'Dólar',  symbol:'$',   decimals:2 },
+  EUR: { flag:'🇪🇺', name:'Euro',   symbol:'€',   decimals:2 },
+  PEN: { flag:'🇵🇪', name:'Sol',    symbol:'S/',  decimals:2 },
+};
+const TOURIST_SPREAD = 0.04; // 4% spread médio de câmbio turístico
+const CACHE_KEY = 'cambio_peru_rates';
+const AUTH_KEY  = 'cambio_peru_authed';
+const PASS_KEY  = 'cambio_peru_pass';
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 min
+
+let rates = null; // rates in USD (base)
+let authToken = null;
+
+// ════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════
+function tryAuth() {
+  const input = document.getElementById('auth-input').value.trim();
+  const errEl = document.getElementById('auth-error');
+
+  // lockout check
+  const lockUntil = parseInt(localStorage.getItem('cambio_lockUntil') || '0');
+  if (Date.now() < lockUntil) {
+    const rem = Math.ceil((lockUntil - Date.now()) / 1000);
+    errEl.textContent = `Muitas tentativas. Aguarde ${rem}s.`;
+    return;
+  }
+
+  // stored hashed password: on first use, save hash; subsequent use verify
+  const stored = localStorage.getItem(PASS_KEY);
+  const hash = simpleHash(input);
+
+  if (!stored) {
+    // first run — just accept and store hash
+    localStorage.setItem(PASS_KEY, hash);
+    localStorage.removeItem('cambio_attempts');
+    completeAuth(input);
+    return;
+  }
+
+  if (hash === stored) {
+    localStorage.removeItem('cambio_attempts');
+    completeAuth(input);
+  } else {
+    let attempts = parseInt(localStorage.getItem('cambio_attempts') || '0') + 1;
+    localStorage.setItem('cambio_attempts', attempts);
+    if (attempts >= MAX_ATTEMPTS) {
+      localStorage.setItem('cambio_lockUntil', Date.now() + LOCKOUT_DURATION);
+      localStorage.removeItem('cambio_attempts');
+      errEl.textContent = 'Conta bloqueada por 5 minutos.';
+    } else {
+      errEl.textContent = `Senha incorreta. (${MAX_ATTEMPTS - attempts} tentativa(s) restantes)`;
+    }
+    document.getElementById('auth-input').value = '';
+  }
+}
+
+function completeAuth(pass) {
+  authToken = btoa(pass + ':' + Date.now());
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('auth-input').addEventListener('keydown', e => { if (e.key==='Enter') tryAuth(); });
+  init();
+}
+
+function skipAuth() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  init(true);
+}
+
+// Simple djb2 hash (not crypto, just obfuscation for casual protection)
+function simpleHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+  return (h >>> 0).toString(36);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('auth-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryAuth();
+  });
+});
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+async function init(offlineMode = false) {
+  renderRateCards(null); // show skeletons
+  renderResults();
+
+  const cached = loadCache();
+
+  if (cached) {
+    rates = cached.rates;
+    setStatus('ok', `Cache de hoje • ${formatTime(cached.savedAt)}`);
+    renderRateCards(rates);
+    renderResults();
+    if (!offlineMode && isStale(cached.savedAt)) {
+      // background refresh
+      await fetchRates(true);
+    }
+  } else if (!offlineMode) {
+    setStatus('loading', 'Buscando cotações...');
+    await fetchRates(false);
+  } else {
+    setStatus('error', 'Modo offline — sem dados em cache');
+    renderRateCards({});
+  }
+
+  renderGuide();
+}
+
+// ════════════════════════════════════════════════
+//  FETCH
+// ════════════════════════════════════════════════
+async function fetchRates(silent = false) {
+  setRefreshLoading(true);
+  if (!silent) setStatus('loading', 'Buscando cotações...');
+
+  try {
+    const url = `${GAS_URL}?token=${encodeURIComponent(authToken || '')}&t=${Date.now()}`;
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    rates = data.rates;
+    saveCache(rates);
+    setStatus('ok', `Atualizado • ${formatTime(Date.now())}`);
+    renderRateCards(rates);
+    renderResults();
+    showToast('Cotações atualizadas ✓');
+  } catch (err) {
+    console.error(err);
+    const cached = loadCache();
+    if (cached) {
+      rates = cached.rates;
+      setStatus('error', `Erro na API — exibindo cache de ${formatDate(cached.savedAt)}`);
+      renderRateCards(rates);
+    } else {
+      setStatus('error', 'Sem conexão e sem cache');
+      renderRateCards({});
+    }
+    if (!silent) showToast('Erro ao atualizar. Usando cache.');
+  } finally {
+    setRefreshLoading(false);
+  }
+}
+
+async function refreshRates() {
+  if (!authToken) { showToast('Faça login para atualizar.'); return; }
+  await fetchRates(false);
+}
+
+// ════════════════════════════════════════════════
+//  CACHE
+// ════════════════════════════════════════════════
+function saveCache(r) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify({ rates: r, savedAt: Date.now() }));
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function isStale(savedAt) {
+  const saved = new Date(savedAt);
+  const now = new Date();
+  return saved.toDateString() !== now.toDateString();
+}
+
+// ════════════════════════════════════════════════
+//  RENDER — RATE CARDS
+// ════════════════════════════════════════════════
+function renderRateCards(r) {
+  const grid = document.getElementById('rates-grid');
+  grid.innerHTML = '';
+  CURRENCIES.forEach(code => {
+    const meta = CURRENCY_META[code];
+    const card = document.createElement('div');
+    card.className = 'rate-card';
+    card.id = `card-${code}`;
+    if (!r) {
+      card.innerHTML = `
+        <div class="rate-flag">${meta.flag}</div>
+        <div class="rate-name">${meta.name}</div>
+        <div class="rate-skeleton" style="width:60%;margin-bottom:8px;"></div>
+        <div class="rate-skeleton" style="width:80%;height:12px;"></div>`;
+    } else {
+      const usdRate = r['USD'] || 1;
+      const valueInUSD = r[code] ? (usdRate / r[code]) : null;
+      const vs1USD = r[code] ? fmtNum(r[code] / usdRate) : '—';
+      const vs1BRL = r[code] && r['BRL'] ? fmtNum(r[code] / r['BRL']) : '—';
+      card.innerHTML = `
+        <div class="rate-flag">${meta.flag}</div>
+        <div class="rate-name">${meta.name}</div>
+        <div class="rate-code">${meta.symbol} ${vs1USD}</div>
+        <div class="rate-value">1 USD = ${meta.symbol} ${vs1USD}</div>
+        <div class="rate-value" style="margin-top:2px;">1 BRL = ${meta.symbol} ${vs1BRL}</div>`;
+    }
+    grid.appendChild(card);
+  });
+}
+
+// ════════════════════════════════════════════════
+//  CONVERTER
+// ════════════════════════════════════════════════
+function convert() {
+  renderResults();
+}
+
+function renderResults() {
+  const grid = document.getElementById('results-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const fromCode = document.getElementById('from-currency')?.value || 'BRL';
+  const amount   = parseFloat(document.getElementById('amount-input')?.value) || 0;
+
+  CURRENCIES.forEach(code => {
+    const meta = CURRENCY_META[code];
+    const item = document.createElement('div');
+    item.className = 'result-item' + (code === fromCode ? ' highlight' : '');
+
+    let converted = '—';
+    let note = '';
+    if (rates && rates[fromCode] && rates[code]) {
+      const raw = amount * (rates[code] / rates[fromCode]);
+      const tourist = raw * (1 - TOURIST_SPREAD);
+      converted = fmtMoney(code === fromCode ? amount : tourist, meta.symbol);
+      note = code !== fromCode ? `~mercado: ${fmtMoney(raw, meta.symbol)}` : 'valor original';
+    }
+
+    item.innerHTML = `
+      <div class="result-flag">${meta.flag}</div>
+      <div class="result-code">${code}</div>
+      <div class="result-value">${converted}</div>
+      <div class="result-note">${note}</div>`;
+    grid.appendChild(item);
+  });
+}
+
+// ════════════════════════════════════════════════
+//  GUIDE
+// ════════════════════════════════════════════════
+const GUIDE_METHODS = {
+  BRL: [
+    {
+      icon: '🏦', bg: '#5af7a215',
+      title: 'Casa de câmbio no Peru',
+      subtitle: 'Melhor custo-benefício no destino',
+      badge: 'badge-best', badgeLabel: 'Recomendado',
+      body: `<p>Troque <strong>Reais por Soles</strong> diretamente nas casas de câmbio de Lima, Cusco ou Arequipa.</p>
+      <ul>
+        <li>Leve Reais em espécie — aceitos em casas de câmbio centrais</li>
+        <li>Pesquise na <strong>Calle Ocoña</strong> (Lima) ou centro histórico de Cusco</li>
+        <li>Sempre compare a taxa em pelo menos 3 casas antes</li>
+        <li>Evite cambistas de rua (risco de notas falsas)</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://maps.google.com/?q=casas+de+cambio+Lima+Peru" target="_blank" rel="noopener">📍 Ver no mapa</a>
+        <a class="method-link" href="https://www.google.com/search?q=mejores+casas+de+cambio+Lima" target="_blank" rel="noopener">🔍 Pesquisar online</a>
+      </div>`
+    },
+    {
+      icon: '💳', bg: '#7c6af715',
+      title: 'Cartão de débito internacional',
+      subtitle: 'Saque em soles no caixa eletrônico',
+      badge: 'badge-ok', badgeLabel: 'Prático',
+      body: `<p>Use seu cartão brasileiro em caixas Visa/Mastercard no Peru.</p>
+      <ul>
+        <li>Banco Wise (Wise.com) — menor spread cambial</li>
+        <li>Nubank ou C6 — isenção de IOF em alguns casos</li>
+        <li>Evite caixas de bancos particulares que cobram taxa extra</li>
+        <li>BCP e Interbank têm os melhores caixas para estrangeiros</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://wise.com/br/" target="_blank" rel="noopener">🌐 Wise</a>
+        <a class="method-link" href="https://nubank.com.br" target="_blank" rel="noopener">🟣 Nubank</a>
+        <a class="method-link" href="https://www.viabcp.com" target="_blank" rel="noopener">🏧 BCP (Peru)</a>
+      </div>`
+    },
+    {
+      icon: '✈️', bg: '#f7a26a15',
+      title: 'Câmbio no Brasil antes de viajar',
+      subtitle: 'Converta para USD ou EUR antes',
+      badge: 'badge-ok', badgeLabel: 'Alternativa',
+      body: `<p>Dólares ou Euros são aceitos em muitas casas de câmbio no Peru com melhor cotação que BRL direto.</p>
+      <ul>
+        <li>Compre USD/EUR no Brasil (banco, corretora ou casa de câmbio)</li>
+        <li>No Peru, troque USD → PEN com taxa excelente</li>
+        <li>Wise ou Remessa Online para transferir digitalmente</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://remessaonline.com.br" target="_blank" rel="noopener">🌐 Remessa Online</a>
+        <a class="method-link" href="https://wise.com/br/" target="_blank" rel="noopener">🌐 Wise</a>
+      </div>`
+    },
+    {
+      icon: '🚫', bg: '#f76a6a15',
+      title: 'Câmbio no aeroporto',
+      subtitle: 'Taxas altíssimas — evite ao máximo',
+      badge: 'badge-avoid', badgeLabel: 'Evitar',
+      body: `<p>Câmbio em aeroportos cobra entre <strong>8% e 15%</strong> a mais que o mercado.</p>
+      <ul>
+        <li>Só use se for absolutamente necessário para transporte do aeroporto</li>
+        <li>Leve algum sol peruano (PEN) do Brasil se possível</li>
+        <li>Ou use cartão no caixa do próprio aeroporto (BCP ou Interbank)</li>
+      </ul>`
+    },
+  ],
+  USD: [
+    {
+      icon: '🏆', bg: '#5af7a215',
+      title: 'Trocar USD → PEN no Peru',
+      subtitle: 'A melhor opção possível',
+      badge: 'badge-best', badgeLabel: 'Ótimo',
+      body: `<p>O Dólar americano tem <strong>excelente aceitação</strong> nas casas de câmbio peruanas.</p>
+      <ul>
+        <li>Leve notas de $50 e $100 (melhor cotação)</li>
+        <li>Notas velhas, rasgadas ou com carimbo são recusadas</li>
+        <li>Calle Ocoña em Lima: melhor local de câmbio do país</li>
+        <li>Taxa típica: 1 USD ≈ 3.70~3.80 PEN</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://maps.google.com/?q=calle+ocona+lima+cambio" target="_blank" rel="noopener">📍 Calle Ocoña</a>
+      </div>`
+    },
+    {
+      icon: '💳', bg: '#7c6af715',
+      title: 'Cartão em USD (Wise / Revolut)',
+      subtitle: 'Zero IOF, ótima cotação',
+      badge: 'badge-best', badgeLabel: 'Recomendado',
+      body: `<p>Cartões pré-carregados em USD têm a melhor cotação para saques no Peru.</p>
+      <ul>
+        <li>Wise: conversão ao mid-rate, taxa de saque baixa</li>
+        <li>Revolut: sem taxa de conversão até certo limite</li>
+        <li>Saque em caixas Visa/Mastercard no Peru</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://wise.com" target="_blank" rel="noopener">🌐 Wise</a>
+        <a class="method-link" href="https://revolut.com" target="_blank" rel="noopener">🌐 Revolut</a>
+      </div>`
+    },
+  ],
+  EUR: [
+    {
+      icon: '🏦', bg: '#5af7a215',
+      title: 'Trocar EUR → PEN no Peru',
+      subtitle: 'Boa opção em casas especializadas',
+      badge: 'badge-best', badgeLabel: 'Bom',
+      body: `<p>Euro é aceito nas principais casas de câmbio, mas com spread levemente maior que USD.</p>
+      <ul>
+        <li>Prefira casas de câmbio em Lima Centro ou Miraflores</li>
+        <li>Compare cotação EUR vs conversão EUR→USD→PEN</li>
+        <li>Notas aceitas: €50, €100, €200</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://maps.google.com/?q=casas+de+cambio+miraflores+lima" target="_blank" rel="noopener">📍 Miraflores</a>
+      </div>`
+    },
+    {
+      icon: '💳', bg: '#7c6af715',
+      title: 'Wise / N26 em EUR',
+      subtitle: 'Melhor taxa digital disponível',
+      badge: 'badge-best', badgeLabel: 'Recomendado',
+      body: `<p>Bancos digitais europeus oferecem câmbio ao mid-rate no Peru.</p>
+      <ul>
+        <li>N26 (para europeus): sem taxa de câmbio</li>
+        <li>Wise: transparente com taxas explícitas</li>
+        <li>Revolut Premium: câmbio gratuito nos dias úteis</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://wise.com" target="_blank" rel="noopener">🌐 Wise</a>
+        <a class="method-link" href="https://n26.com" target="_blank" rel="noopener">🌐 N26</a>
+      </div>`
+    },
+  ],
+  PEN: [
+    {
+      icon: '✅', bg: '#5af7a215',
+      title: 'Você já tem Soles!',
+      subtitle: 'Moeda local do Peru',
+      badge: 'badge-best', badgeLabel: 'Perfeito',
+      body: `<p>Com Soles peruanos você pode pagar em qualquer estabelecimento no Peru.</p>
+      <ul>
+        <li>Mercados, restaurantes e transporte: use PEN</li>
+        <li>Guarde algumas notas menores (S/5, S/10) para taxi e mercado</li>
+        <li>PIcaPay e Yape são os wallets mais usados localmente</li>
+      </ul>`
+    },
+    {
+      icon: '🔄', bg: '#7c6af715',
+      title: 'Converter de volta para BRL/USD',
+      subtitle: 'Se sobrar soles',
+      badge: 'badge-ok', badgeLabel: 'Possível',
+      body: `<p>Ao retornar ao Brasil, pode ser difícil encontrar comprador para PEN.</p>
+      <ul>
+        <li>Troque PEN de volta para USD no Peru antes de embarcar</li>
+        <li>No Brasil, Banco do Brasil e casas de câmbio do aeroporto aceitam PEN (com spread alto)</li>
+        <li>Wise aceita transferência de PEN → BRL digitalmente</li>
+      </ul>
+      <div class="method-links">
+        <a class="method-link" href="https://wise.com/br/" target="_blank" rel="noopener">🌐 Wise</a>
+      </div>`
+    },
+  ],
+};
+
+function renderGuide() {
+  const from = document.getElementById('guide-from')?.value || 'BRL';
+  const container = document.getElementById('guide-methods');
+  if (!container) return;
+
+  const methods = GUIDE_METHODS[from] || GUIDE_METHODS['BRL'];
+  container.innerHTML = '';
+
+  methods.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'method-card';
+    card.innerHTML = `
+      <div class="method-card-header" onclick="toggleMethod(this.parentElement)">
+        <div class="method-info">
+          <div class="method-icon" style="background:${m.bg}">${m.icon}</div>
+          <div>
+            <div class="method-title">${m.title}</div>
+            <div class="method-subtitle">${m.subtitle}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="method-badge ${m.badge}">${m.badgeLabel}</span>
+          <span class="method-chevron">⌄</span>
+        </div>
+      </div>
+      <div class="method-body">${m.body}</div>`;
+    if (i === 0) card.classList.add('open');
+    container.appendChild(card);
+  });
+
+  const tip = document.createElement('div');
+  tip.className = 'tip-box';
+  tip.innerHTML = `<strong>💡 Dica geral:</strong> No Peru, o câmbio mais vantajoso costuma ser feito em espécie (USD ou EUR) nas casas de câmbio do centro de Lima (Calle Ocoña) ou de Miraflores. Evite aeroportos e hotéis.`;
+  container.appendChild(tip);
+}
+
+function toggleMethod(card) {
+  card.classList.toggle('open');
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function showPanel(name, tabBtn, navId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+
+  // desktop tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (tabBtn) tabBtn.classList.add('active');
+
+  // mobile nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (navId) document.getElementById(navId).classList.add('active');
+  else {
+    const map = { rates:'nav-rates', converter:'nav-converter', guide:'nav-guide' };
+    document.getElementById(map[name])?.classList.add('active');
+  }
+
+  if (name === 'guide') renderGuide();
+  if (name === 'converter') convert();
+}
+
+// ════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════
+function setStatus(state, msg) {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  dot.className = `status-dot ${state}`;
+  text.textContent = msg;
+}
+
+function setRefreshLoading(on) {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  const lbl  = document.getElementById('refresh-label');
+  btn.classList.toggle('loading', on);
+  lbl.textContent = on ? 'Atualizando…' : 'Atualizar';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function fmtNum(n) {
+  if (!isFinite(n)) return '—';
+  if (n >= 1000) return n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  if (n >= 10)   return n.toFixed(2);
+  if (n >= 1)    return n.toFixed(3);
+  return n.toFixed(4);
+}
+
+function fmtMoney(code, sym) {
+  // overload: fmtMoney(value, symbol)
+  const val = code;
+  if (!isFinite(val)) return '—';
+  return `${sym} ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDate(ts) {
+  return new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+</script>
+</body>
+</html>
