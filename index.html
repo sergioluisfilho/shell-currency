@@ -46,6 +46,17 @@
       min-height: 100%;
     }
 
+    /* Barra de safe area no topo — só visível no PWA standalone */
+    .safe-area-top {
+      display: none;
+      height: env(safe-area-inset-top);
+      background: var(--bg);
+      width: 100%;
+    }
+    @media (display-mode: standalone) {
+      .safe-area-top { display: block; }
+    }
+
     .app-scroll { display: contents; }
 
     .app {
@@ -362,6 +373,7 @@
 </head>
 <body>
 
+<div class="safe-area-top"></div>
 <div class="app-scroll">
 
 <!-- Auth Overlay -->
