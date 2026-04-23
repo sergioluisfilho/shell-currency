@@ -69,9 +69,6 @@
         flex-direction: column;
         height: 100dvh;
         height: 100vh;
-        padding-top: env(safe-area-inset-top);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
       }
       .app-scroll {
         display: block;
@@ -79,8 +76,13 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
+      /* Safe area aplicada no conteúdo, não no body,
+         para não conflitar com overflow:hidden */
       .app {
         padding: 20px 16px 24px;
+        padding-top: calc(20px + env(safe-area-inset-top));
+        padding-left: calc(16px + env(safe-area-inset-left));
+        padding-right: calc(16px + env(safe-area-inset-right));
       }
       @media (min-width: 768px) {
         .app { padding: 40px 24px 40px; }
