@@ -1086,7 +1086,21 @@ function formatDate(ts) {
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(err => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        // Detecta quando um novo SW está esperando para ativar
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // Há versão nova instalada — recarrega automaticamente
+              newSW.postMessage('SKIP_WAITING');
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+              });
+            }
+          });
+        });
+      }).catch(err => {
         console.warn('Service Worker não registrado:', err);
       });
     });

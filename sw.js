@@ -1,9 +1,15 @@
 // ═══════════════════════════════════════════════════════════
 //  CÂMBIO PERU — Service Worker
-//  Estratégia: Cache First para assets, Network First para API
+//  Estratégia: Network First para HTML, Cache First para assets
+//
+//  Para publicar nova versão: incremente CACHE_VERSION abaixo.
+//  O app detecta automaticamente e recarrega sem precisar
+//  apagar o atalho.
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'cambio-peru-v1';
+const CACHE_VERSION = 'v2'; // ← incremente a cada deploy
+const CACHE_NAME    = `cambio-peru-${CACHE_VERSION}`;
+
 const ASSETS = [
   '/',
   '/index.html',
@@ -13,32 +19,35 @@ const ASSETS = [
   '/icons/icon-180.png',
 ];
 
-// ── Install: pré-cacheia todos os assets estáticos ──────────
+// ── Install: pré-cacheia assets ─────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // ativa imediatamente sem esperar fechar abas
 });
 
-// ── Activate: remove caches antigos ────────────────────────
+// ── Activate: apaga caches antigos e assume controle ────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
-    )
+    ).then(() => self.clients.claim()) // assume controle de todas as abas
   );
-  self.clients.claim();
 });
 
-// ── Fetch: Cache First para assets, Network First para GAS ─
+// ── Message: página pode pedir reload após SW atualizar ─────
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// ── Fetch ────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Requisições ao Google Apps Script: sempre tenta network primeiro
-  // (o localStorage do app já cuida do cache de dados — o SW não interfere)
+  // GAS: sempre network, sem cache
   if (url.hostname.includes('script.google.com')) {
     event.respondWith(
       fetch(event.request).catch(() =>
@@ -50,16 +59,27 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Assets estáticos: Cache First
+  // HTML (index.html / raiz): Network First
+  // Sempre tenta buscar versão nova; usa cache só se offline
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Assets estáticos (ícones, manifest): Cache First
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        // Só cacheia respostas válidas e do mesmo origin
-        if (
-          response.status === 200 &&
-          url.origin === self.location.origin
-        ) {
+        if (response.status === 200 && url.origin === self.location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
