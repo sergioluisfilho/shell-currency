@@ -602,6 +602,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') tryAuth();
   });
 
+  // DEBUG — remover depois
+  setTimeout(() => {
+    const sat = getComputedStyle(document.documentElement).getPropertyValue('--sat') || 'n/a';
+    const el = document.querySelector('.safe-area-top');
+    const elH = el ? el.offsetHeight : 'elem não encontrado';
+    const standalone = window.matchMedia('(display-mode: standalone)').matches;
+    showToast(`sat=${elH}px | pwa=${standalone}`);
+  }, 1500);
+
   // Auto-login se tiver sessão salva e senha válida
   const savedSession = localStorage.getItem(SESSION_KEY);
   const savedHash    = localStorage.getItem(PASS_KEY);
