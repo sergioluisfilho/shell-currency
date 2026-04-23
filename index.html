@@ -38,6 +38,12 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+      scroll-behavior: auto;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
@@ -1085,6 +1091,12 @@ function formatDate(ts) {
       });
     });
   }
+
+  // Garante que a página sempre abre no topo no Safari iOS
+  window.addEventListener('load', () => window.scrollTo(0, 0));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') window.scrollTo(0, 0);
+  });
 </script>
 </body>
 </html>
